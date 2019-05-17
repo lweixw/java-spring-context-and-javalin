@@ -28,7 +28,7 @@ repositories {
 dependencies {
 
     implementation 'org.springframework:spring-context:5.1.7.RELEASE'
-    implementation 'com.sparkjava:spark-core:2.9.0'
+    implementation 'io.javalin:javalin:2.8.0'
     implementation 'org.slf4j:slf4j-simple:1.7.21'
 
     // Use JUnit test framework

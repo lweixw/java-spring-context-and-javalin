@@ -3,21 +3,19 @@
  */
 package spring.ioc.example;
 
+import io.javalin.Javalin;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import spring.ioc.example.Consumer.AnotherService;
 import spring.ioc.example.Consumer.BarService;
 import spring.ioc.example.Consumer.Config;
 import spring.ioc.example.Consumer.FooService;
 
-import static spark.Spark.get;
-import static spark.Spark.port;
-
 public class App {
 
 	static void startWebServer() {
 
-		port(80);
-		get("/health-check", "application/json", (req, res) -> "{ \"message\": \"I'm ok\" }\n");
+		var webServer = Javalin.create().defaultContentType("application/json").start(80);
+		webServer.get("/health-check", ctx -> ctx.result("{ \"message\": \"I'm ok\" }\n"));
 	}
 
 	static void startWorkers() {
