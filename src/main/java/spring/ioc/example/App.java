@@ -8,33 +8,40 @@ import spring.ioc.example.Consumer.AnotherService;
 import spring.ioc.example.Consumer.BarService;
 import spring.ioc.example.Consumer.Config;
 import spring.ioc.example.Consumer.FooService;
+
 import static spark.Spark.get;
 import static spark.Spark.port;
 
 public class App {
 
-    static void startWebServer() {
+	static void startWebServer() {
 
-        port(80);
-        get("/health-check", "application/json", (req, res) -> "{ \"message\": \"I'm ok\" }\n");
-    }
+		port(80);
+		get("/health-check", "application/json", (req, res) -> "{ \"message\": \"I'm ok\" }\n");
+	}
 
-    static void startWorkers() {
-        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.register(Config.class);
-        applicationContext.refresh();
+	static void startWorkers() {
+		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+		applicationContext.register(Config.class);
+		applicationContext.refresh();
 
-        FooService fooService = applicationContext.getBean(FooService.class);
-        BarService barService = applicationContext.getBean(BarService.class);
-        AnotherService anotherService = applicationContext.getBean(AnotherService.class);
-        barService.start();
-        fooService.start();
-        anotherService.start();
-    }
+		FooService fooService = applicationContext.getBean(FooService.class);
+		BarService barService = applicationContext.getBean(BarService.class);
+		AnotherService anotherService = applicationContext.getBean(AnotherService.class);
+		barService.start();
+		fooService.start();
+		anotherService.start();
+	}
 
 
-    public static void main(String[] args) {
-      startWebServer();
-    	startWorkers();
-    }
+	public static void main(String[] args) {
+		startWebServer();
+		startWorkers();
+
+		Runtime rt = Runtime.getRuntime();
+
+		System.out.println("cpu cores: " + rt.availableProcessors());
+		System.out.println("total memory: " + rt.totalMemory());
+		System.out.println("free memory: " + rt.freeMemory());
+	}
 }

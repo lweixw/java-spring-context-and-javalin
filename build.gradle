@@ -12,8 +12,11 @@ plugins {
 
     // Apply the application plugin to add support for building an application
     id 'application'
+
+    id 'com.google.cloud.tools.jib' version '1.2.0'
 }
 
+jib.from.image = 'openjdk:11.0.3-jre-slim'
 
 
 repositories {
@@ -25,7 +28,7 @@ repositories {
 dependencies {
 
     implementation 'org.springframework:spring-context:5.1.7.RELEASE'
-    implementation 'com.sparkjava:spark-core:2.8.0'
+    implementation 'com.sparkjava:spark-core:2.9.0'
     implementation 'org.slf4j:slf4j-simple:1.7.21'
 
     // Use JUnit test framework
