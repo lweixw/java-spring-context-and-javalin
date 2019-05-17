@@ -35,8 +35,8 @@ public class App {
 
 
 	public static void main(String[] args) {
-		startWebServer();
 		startWorkers();
+		startWebServer();
 
 		Runtime rt = Runtime.getRuntime();
 
