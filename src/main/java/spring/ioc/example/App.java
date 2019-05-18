@@ -14,8 +14,13 @@ public class App {
 
 	static void startWebServer() {
 
-		var webServer = Javalin.create().defaultContentType("application/json").start(80);
-		webServer.get("/health-check", ctx -> ctx.result("{ \"message\": \"I'm ok\" }\n"));
+		Javalin.create()
+			.defaultContentType("application/json")
+			.requestLogger((ctx, timeMs) ->
+				System.out.println(ctx.method() + " " + ctx.path() + " took " + timeMs + " ms")
+			)
+			.get("/health-check", ctx -> ctx.result("{ \"message\": \"I'm ok\" }\n"))
+			.start(80);
 	}
 
 	static void startWorkers() {
@@ -37,7 +42,6 @@ public class App {
 		startWebServer();
 
 		Runtime rt = Runtime.getRuntime();
-
 		System.out.println("cpu cores: " + rt.availableProcessors());
 		System.out.println("total memory: " + rt.totalMemory());
 		System.out.println("free memory: " + rt.freeMemory());
