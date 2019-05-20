@@ -4,19 +4,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Configuration
-@ComponentScan(basePackages = "spring.ioc.example")
-public class Config {
-	@Bean
-	@Autowired
-	FooService fooService(BarService barService) {
-		return new FooService(barService);
-	}
+public class ConsumerConfig {
+  @Bean
+  @Autowired
+  FooService fooService(BarService barService) {
+  	return new FooService(barService);
+  }
 
-	@Bean
-	BarService barService() {
-		return new BarService();
-	}
-
+  @Bean
+  BarService barService() {
+    return new BarService();
+  }
 }
