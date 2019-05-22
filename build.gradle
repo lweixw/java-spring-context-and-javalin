@@ -21,6 +21,8 @@ ext {
     javalinVersion = '2.8.0'
     slf4jVersion = '1.7.21'
     jacksonVersion = '2.9.9'
+    jedisVersion = '3.0.1'
+    guavaVersion = '27.1-jre'
 }
 
 repositories {
@@ -35,6 +37,13 @@ dependencies {
     implementation "io.javalin:javalin:$javalinVersion"
     implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
     implementation "org.slf4j:slf4j-simple:$slf4jVersion"
+
+    // https://mvnrepository.com/artifact/com.google.guava/guava
+    implementation "com.google.guava:guava:$guavaVersion"
+
+    // https://mvnrepository.com/artifact/redis.clients/jedis
+    implementation "redis.clients:jedis:$jedisVersion"
+
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
