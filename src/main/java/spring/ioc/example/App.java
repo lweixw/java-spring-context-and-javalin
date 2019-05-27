@@ -3,8 +3,10 @@ package spring.ioc.example;
 import io.javalin.Javalin;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import spring.ioc.example.Consumer.*;
+import spring.ioc.example.RedisStore.Playground;
 import spring.ioc.example.SomeOtherStuff.AnotherService;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.text.MessageFormat;
 import java.util.Optional;
@@ -52,10 +54,11 @@ public class App {
     anotherService.start();
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     startWorkers();
     startWebServer();
 
     System.out.println(getMemoryMetrics());
+    Playground.main(args);
   }
 }

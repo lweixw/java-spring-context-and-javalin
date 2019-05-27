@@ -30,7 +30,8 @@ public class Playground {
   public static void main(String[] args) throws JsonProcessingException {
     final byte[] trailingByte = {(byte) 0xff};
 //    Jedis jedis = new Jedis("localhost");
-    Jedis jedis = new Jedis(URI.create("redis://localhost:6379"));
+//    Jedis jedis = new Jedis(URI.create("redis://localhost:6379"));
+    Jedis jedis = new Jedis(URI.create("rediss://master.de-product-svc.1nlvj0.apse2.cache.amazonaws.com:6379"));
     ObjectMapper objectMapper = new ObjectMapper();
     String data = objectMapper.writeValueAsString(getMemoryMetrics());
     jedis.hset("Product", "21902750-7c74-11e9-8f9e-2a86e4085a59", data);
