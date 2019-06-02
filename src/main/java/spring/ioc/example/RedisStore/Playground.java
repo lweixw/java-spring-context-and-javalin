@@ -2,18 +2,12 @@ package spring.ioc.example.RedisStore;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Sets;
-
-import com.google.common.collect.Streams;
 import redis.clients.jedis.Jedis;
 import spring.ioc.example.Consumer.HealthCheckMetrics;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import static spring.ioc.example.RedisStore.index.RedisIndex.*;
 
 public class Playground {
 
@@ -30,8 +24,8 @@ public class Playground {
   public static void main(String[] args) throws JsonProcessingException {
     final byte[] trailingByte = {(byte) 0xff};
 //    Jedis jedis = new Jedis("localhost");
-//    Jedis jedis = new Jedis(URI.create("redis://localhost:6379"));
-    Jedis jedis = new Jedis(URI.create("rediss://master.de-product-svc.1nlvj0.apse2.cache.amazonaws.com:6379"));
+    Jedis jedis = new Jedis(URI.create("redis://localhost:6379"));
+//    Jedis jedis = new Jedis(URI.create("rediss://master.de-product-svc.1nlvj0.apse2.cache.amazonaws.com:6379"));
     ObjectMapper objectMapper = new ObjectMapper();
     String data = objectMapper.writeValueAsString(getMemoryMetrics());
     jedis.hset("Product", "21902750-7c74-11e9-8f9e-2a86e4085a59", data);
@@ -44,39 +38,45 @@ public class Playground {
     pipeline.hset("Product", "4", "value4");
     pipeline.hset("Product", "5", "value5");
 
-    pipeline.zadd("_idxRate", 3.65, "1");
-    pipeline.zadd("_idxRate", 3.45, "2");
-    pipeline.zadd("_idxRate", 3.55, "3");
-    pipeline.zadd("_idxRate", 3.75, "4");
-    pipeline.zadd("_idxRate", 3.55, "5");
 
-    pipeline.zadd("_idxFunder:ANZ", 0, "3");
-    pipeline.zadd("_idxFunder:CBA", 0, "2");
-    pipeline.zadd("_idxFunder:ANZ", 0, "1");
-    pipeline.zadd("_idxFunder:ANZ", 0, "4");
-    pipeline.zadd("_idxFunder:WESTPAC", 0, "5");
+//    pipeline.zadd("_idxRate", 3.65, "1");
+//    pipeline.zadd("_idxRate", 3.45, "2");
+//    pipeline.zadd("_idxRate", 3.55, "3");
+//    pipeline.zadd("_idxRate", 3.75, "4");
+//    pipeline.zadd("_idxRate", 3.55, "5");
+//
+//    pipeline.zadd("_idxFunder:ANZ", 0, "3");
+//    pipeline.zadd("_idxFunder:CBA", 0, "2");
+//    pipeline.zadd("_idxFunder:ANZ", 0, "1");
+//    pipeline.zadd("_idxFunder:ANZ", 0, "4");
+//    pipeline.zadd("_idxFunder:WESTPAC", 0, "5");
+
+    // add index
+    addIndex(pipeline, "interestRate", 3.65, "1");
+    addIndex(pipeline, "interestRate", 3.45, "2");
+    addIndex(pipeline, "interestRate", 3.55, "3");
+    addIndex(pipeline, "interestRate", 3.75, "4");
+    addIndex(pipeline, "interestRate", 3.55, "5");
+
+    addIndex(pipeline, "Funder", "ANZ", "3");
+    addIndex(pipeline, "Funder", "CBA", "2");
+    addIndex(pipeline, "Funder", "ANZ", "1");
+    addIndex(pipeline, "Funder", "ANZ", "4");
+    addIndex(pipeline, "Funder", "WESTPAC", "5");
+
+    addFuzzyIndex(pipeline, "Funder", "ANZ", "3");
+    addFuzzyIndex(pipeline, "Funder", "CBA", "2");
+    addFuzzyIndex(pipeline, "Funder", "ANZ", "1");
+    addFuzzyIndex(pipeline, "Funder", "ANZ", "4");
+    addFuzzyIndex(pipeline, "Funder", "WESTPAC", "5");
 
     pipeline.sync();
     // queries
     var queryPipeline = jedis.pipelined();
-    String funderQuery = "ANZ";
-    var rateResult = queryPipeline.zrangeByScore("_idxRate", 3.40, 3.60);
-    var funderResult = queryPipeline.zrange("_idxFunder:" + funderQuery, 0, -1);
-
+    var rateIdxResponse = getIndex(queryPipeline, "interestRate", 3.55, 3.65);
+    var funderIdxResponse = endsWith(queryPipeline, "Funder", "Z");
     queryPipeline.sync();
-    System.out.println(rateResult.get());
-    System.out.println(funderResult.get());
-    Set<String> rates = rateResult.get();
-    Set<String> funders = funderResult.get();
-    queryPipeline.close();
-    Set<String> result = Sets.intersection(funders, rates);
-    System.out.println(result);
-
-    var resultPipeline = jedis.pipelined();
-
-    var finalResultResponses =
-        result.stream().map(id -> resultPipeline.hget("Product", id)).collect(Collectors.toList());
-    resultPipeline.sync();
-    finalResultResponses.forEach(res -> System.out.println(res.get()));
+    System.out.println(rateIdxResponse.get());
+    System.out.println(funderIdxResponse.get());
   }
 }
