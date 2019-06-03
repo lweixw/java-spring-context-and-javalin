@@ -39,30 +39,18 @@ public class Playground {
     pipeline.hset("Product", "5", "value5");
 
 
-//    pipeline.zadd("_idxRate", 3.65, "1");
-//    pipeline.zadd("_idxRate", 3.45, "2");
-//    pipeline.zadd("_idxRate", 3.55, "3");
-//    pipeline.zadd("_idxRate", 3.75, "4");
-//    pipeline.zadd("_idxRate", 3.55, "5");
-//
-//    pipeline.zadd("_idxFunder:ANZ", 0, "3");
-//    pipeline.zadd("_idxFunder:CBA", 0, "2");
-//    pipeline.zadd("_idxFunder:ANZ", 0, "1");
-//    pipeline.zadd("_idxFunder:ANZ", 0, "4");
-//    pipeline.zadd("_idxFunder:WESTPAC", 0, "5");
-
     // add index
-    addIndex(pipeline, "interestRate", 3.65, "1");
-    addIndex(pipeline, "interestRate", 3.45, "2");
-    addIndex(pipeline, "interestRate", 3.55, "3");
-    addIndex(pipeline, "interestRate", 3.75, "4");
-    addIndex(pipeline, "interestRate", 3.55, "5");
+    addNumberIndex(pipeline, "interestRate", 3.65, "1");
+    addNumberIndex(pipeline, "interestRate", 3.45, "2");
+    addNumberIndex(pipeline, "interestRate", 3.55, "3");
+    addNumberIndex(pipeline, "interestRate", 3.75, "4");
+    addNumberIndex(pipeline, "interestRate", 3.55, "5");
 
-    addIndex(pipeline, "Funder", "ANZ", "3");
-    addIndex(pipeline, "Funder", "CBA", "2");
-    addIndex(pipeline, "Funder", "ANZ", "1");
-    addIndex(pipeline, "Funder", "ANZ", "4");
-    addIndex(pipeline, "Funder", "WESTPAC", "5");
+    addStringIndex(pipeline, "Funder", "ANZ", "3");
+    addStringIndex(pipeline, "Funder", "CBA", "2");
+    addStringIndex(pipeline, "Funder", "ANZ", "1");
+    addStringIndex(pipeline, "Funder", "ANZ", "4");
+    addStringIndex(pipeline, "Funder", "WESTPAC", "5");
 
     addFuzzyIndex(pipeline, "Funder", "ANZ", "3");
     addFuzzyIndex(pipeline, "Funder", "CBA", "2");
@@ -73,10 +61,20 @@ public class Playground {
     pipeline.sync();
     // queries
     var queryPipeline = jedis.pipelined();
-    var rateIdxResponse = getIndex(queryPipeline, "interestRate", 3.55, 3.65);
-    var funderIdxResponse = endsWith(queryPipeline, "Funder", "Z");
+    var rateIdxResponse = getNumberIndex(queryPipeline, "interestRate", 3.55, 3.65);
+    var funderIdxResponse0 = startsWith(queryPipeline, "Funder", "C");
+    var funderIdxResponse1 = endsWith(queryPipeline, "Funder", "Z");
     queryPipeline.sync();
+    var anzProducts = getStringIndexByFullScan(jedis, "Funder", "ANZ");
     System.out.println(rateIdxResponse.get());
-    System.out.println(funderIdxResponse.get());
+    System.out.println(funderIdxResponse0.get());
+    System.out.println(funderIdxResponse1.get());
+    System.out.println(anzProducts);
+
+    var removePipeline = jedis.pipelined();
+    removeNumberIndex(removePipeline,"interestRate", "5");
+    removeFuzzyIndex(removePipeline, "Funder", "WESTPAC","5");
+    removeStringIndex(removePipeline, "Funder", "ANZ", "1");
+    removePipeline.sync();
   }
 }

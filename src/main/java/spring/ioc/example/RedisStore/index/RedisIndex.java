@@ -2,7 +2,6 @@ package spring.ioc.example.RedisStore.index;
 
 import com.google.common.primitives.Bytes;
 import redis.clients.jedis.*;
-
 import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,49 +33,65 @@ public final class RedisIndex {
     return new StringBuilder(value).reverse().toString();
   }
 
-  public static Pipeline addIndex(
+  private static String fuzzyIndexValue(String value, String targetId) {
+    return MessageFormat.format("{0}:{1}", value, targetId);
+  }
+
+  public static void addNumberIndex(
       Pipeline redisPipeline, String attributeName, double value, String targetId) {
     redisPipeline.zadd(rangeIndexKey(attributeName), value, targetId);
-    return redisPipeline;
   }
 
-  public static Pipeline addIndex(
+  public static void addStringIndex(
       Pipeline redisPipeline, String attributeName, String value, String targetId) {
     redisPipeline.sadd(indexKeyForString(attributeName, value), targetId);
-    return redisPipeline;
   }
 
-  public static Pipeline addFuzzyIndex(
-    Pipeline redisPipeline, String attributeName, String value, String targetId) {
-    redisPipeline.zadd(
-      rangeIndexKey(attributeName), 0, MessageFormat.format("{0}:{1}", value, targetId));
-    redisPipeline.zadd(
-      rangeIndexKeyReversed(attributeName),
-      0,
-      MessageFormat.format("{0}:{1}", reverseStringValue(value), targetId));
-    return redisPipeline;
+  public static void addFuzzyIndex(
+      Pipeline redisPipeline, String attributeName, String value, String targetId) {
+    redisPipeline.zadd(rangeIndexKey(attributeName), 0, fuzzyIndexValue(value, targetId));
+    redisPipeline.zadd(rangeIndexKeyReversed(attributeName), 0, fuzzyIndexValue(value, targetId));
   }
 
-  public static Response<Set<String>> getIndex(
+  public static void removeNumberIndex(
+      Pipeline redisPipeline, String attributeName, String targetId) {
+    redisPipeline.zrem(rangeIndexKey(attributeName), targetId);
+  }
+
+  public static void removeStringIndex(
+      Pipeline redisPipeline, String attributeName, String value, String targetId) {
+    redisPipeline.srem(indexKeyForString(attributeName, value), targetId);
+  }
+
+  public static void removeFuzzyIndex(
+      Pipeline redisPipeline, String attributeName, String value, String targetId) {
+    redisPipeline.zrem(rangeIndexKey(attributeName), fuzzyIndexValue(value, targetId));
+    redisPipeline.zrem(rangeIndexKeyReversed(attributeName), fuzzyIndexValue(value, targetId));
+  }
+
+  public static Response<Set<String>> getNumberIndex(
       Pipeline redisPipeline, String attributeName, double min, double max) {
     return redisPipeline.zrangeByScore(rangeIndexKey(attributeName), min, max);
   }
 
-  public static Response<Set<String>> getIndex(
+  public static Response<Set<String>> getNumberIndex(
       Pipeline redisPipeline, String attributeName, double min, double max, int offset, int limit) {
     return redisPipeline.zrangeByScore(rangeIndexKey(attributeName), min, max, offset, limit);
   }
 
-  public static Response<Set<String>> getIndex(
+  public static Response<Set<String>> getStringIndex(
       Pipeline redisPipeline, String attributeName, String value) {
+    // not recommended to use if you don't know how many members in this key. It might block server
+    // for a "long" time
     return redisPipeline.smembers(indexKeyForString(attributeName, value));
   }
 
-  public static Set<String> getIndex(Jedis redis, String attributeName, String value) {
+  public static Set<String> getStringIndexByFullScan(
+      Jedis redis, String attributeName, String value) {
     Set<String> result = new HashSet<>();
     String cursor = "0";
     while (true) {
-      var scanResult = redis.sscan(rangeIndexKey(attributeName) + ":" + value, cursor);
+      var scanResult = redis.sscan(indexKeyForString(attributeName, value), cursor);
       result.addAll(scanResult.getResult());
       if (scanResult.isCompleteIteration()) {
         break;
@@ -86,10 +101,10 @@ public final class RedisIndex {
     return result;
   }
 
-  public static ScanResult<String> scanIndex(
+  public static ScanResult<String> scanStringIndex(
       Jedis redis, String attributeName, String value, String cursor, int count) {
     return redis.sscan(
-        rangeIndexKey(attributeName) + ":" + value, cursor, new ScanParams().count(count));
+        indexKeyForString(attributeName, value), cursor, new ScanParams().count(count));
   }
 
   public static Response<Set<String>> startsWith(
